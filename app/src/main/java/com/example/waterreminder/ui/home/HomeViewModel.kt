@@ -26,4 +26,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             repository.insertWaterLog(WaterLog(amount = amount, timestamp = Date()))
         }
     }
+
+    fun deleteWaterLog(waterLog: WaterLog) {
+        viewModelScope.launch {
+            repository.deleteWaterLog(waterLog)
+        }
+    }
 }

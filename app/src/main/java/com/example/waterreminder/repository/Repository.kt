@@ -26,10 +26,11 @@ class WaterRepository(
         waterLogDao.insert(waterLog)
     }
 
+    suspend fun deleteWaterLog(waterLog: WaterLog) {
+        waterLogDao.delete(waterLog)
+    }
+
     suspend fun updateUserSettings(settings: UserSettings) {
         userSettingsDao.update(settings)
     }
-    //suspend fun deleteWaterLog(waterLog: WaterLog) {
-    //    waterLogDao.delete(waterLog) // Call the actual DAO function
-    //}
 }
