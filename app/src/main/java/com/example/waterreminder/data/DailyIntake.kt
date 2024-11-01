@@ -4,5 +4,6 @@ import java.util.Date
 
 data class DailyIntake(
     val date: Date,
-    val amount: Int
+    val amount: Int,
+    val dayOfWeek: Int
 )

@@ -23,7 +23,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addWaterIntake(amount: Int) {
         viewModelScope.launch {
-            repository.insertWaterLog(WaterLog(amount = amount, timestamp = Date()))
+            val now = Date()
+            repository.insertWaterLog(WaterLog(amount = amount, timestamp = now))
         }
     }
 
