@@ -14,6 +14,14 @@ class WaterRepository(
     val allLogs: LiveData<List<WaterLog>> = waterLogDao.getAllLogs()
     val userSettings: LiveData<UserSettings> = userSettingsDao.getUserSettings()
 
+    suspend fun getUserSettingsDirect(): UserSettings? {
+        return userSettingsDao.getDirectUserSettings()
+    }
+
+    suspend fun insertUserSettings(settings: UserSettings) {
+        userSettingsDao.insert(settings)
+    }
+
     suspend fun insertWaterLog(waterLog: WaterLog) {
         waterLogDao.insert(waterLog)
     }
@@ -21,4 +29,7 @@ class WaterRepository(
     suspend fun updateUserSettings(settings: UserSettings) {
         userSettingsDao.update(settings)
     }
+    //suspend fun deleteWaterLog(waterLog: WaterLog) {
+    //    waterLogDao.delete(waterLog) // Call the actual DAO function
+    //}
 }

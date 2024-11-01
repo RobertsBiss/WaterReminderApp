@@ -27,6 +27,10 @@ data class UserSettings(
 
 @Dao
 interface UserSettingsDao {
+
+    @Query("SELECT * FROM user_settings WHERE id = 1")
+    suspend fun getDirectUserSettings(): UserSettings?
+
     @Query("SELECT * FROM user_settings WHERE id = 1")
     fun getUserSettings(): LiveData<UserSettings>
 

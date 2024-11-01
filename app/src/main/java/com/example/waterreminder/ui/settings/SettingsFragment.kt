@@ -10,6 +10,7 @@ import com.example.waterreminder.databinding.FragmentSettingsBinding
 import com.example.waterreminder.util.ReminderManager
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import java.util.Locale
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
@@ -68,17 +69,28 @@ class SettingsFragment : Fragment() {
 
     private fun observeSettings() {
         viewModel.userSettings.observe(viewLifecycleOwner) { settings ->
-            binding.apply {
-                dailyGoalInput.setText(settings.dailyGoal.toString())
-                reminderSwitch.isChecked = settings.remindersEnabled
-                reminderTimeText.text = settings.reminderTime
+            if (settings != null) {  // Check for null
+                binding.apply {
+                    dailyGoalInput.setText(String.format(Locale.getDefault(), "%d", settings.dailyGoal))
+                    reminderSwitch.isChecked = settings.remindersEnabled
+                    reminderTimeText.text = settings.reminderTime
 
-                when (settings.waterUnit) {
-                    "ml" -> mlButton.isChecked = true
-                    "oz" -> ozButton.isChecked = true
+                    when (settings.waterUnit) {
+                        "ml" -> unitToggleGroup.check(binding.mlButton.id) // Check ml button
+                        "oz" -> unitToggleGroup.check(binding.ozButton.id) // Check oz button
+                    }
+
+                    themeSwitch.isChecked = settings.isDarkTheme
                 }
-
-                themeSwitch.isChecked = settings.isDarkTheme
+            } else {
+                // Handle the case where settings is null
+                binding.apply {
+                    dailyGoalInput.setText("2000") // Set default value for daily goal
+                    reminderSwitch.isChecked = false // Default to reminders disabled
+                    reminderTimeText.text = "09:00" // Default reminder time
+                    unitToggleGroup.check(binding.mlButton.id) // Default water unit
+                    themeSwitch.isChecked = false // Default to light theme
+                }
             }
         }
 
@@ -99,7 +111,7 @@ class SettingsFragment : Fragment() {
             .build()
 
         picker.addOnPositiveButtonClickListener {
-            val timeString = String.format("%02d:%02d", picker.hour, picker.minute)
+            val timeString = String.format(Locale.getDefault(), "%02d:%02d", picker.hour, picker.minute)
             viewModel.updateReminderTime(timeString)
         }
 
@@ -116,11 +128,11 @@ class SettingsFragment : Fragment() {
     }
 
     private fun showSuccessMessage() {
-        // Show success message using Snackbar
+        // Show success message using Snackbar or Toast
     }
 
     private fun showErrorMessage(message: String) {
-        // Show error message using Snackbar
+        // Show error message using Snackbar or Toast
     }
 
     override fun onDestroyView() {

@@ -13,16 +13,28 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: WaterRepository
-    private val reminderManager = ReminderManager(application)
     val userSettings: LiveData<UserSettings>
-
     private val _settingsUpdateEvent = MutableLiveData<SettingsUpdateEvent>()
     val settingsUpdateEvent: LiveData<SettingsUpdateEvent> = _settingsUpdateEvent
+    private val reminderManager = ReminderManager(application) // Initialized in SettingsViewModel
 
     init {
+
         val database = WaterReminderDatabase.getDatabase(application)
         repository = WaterRepository(database.waterLogDao(), database.userSettingsDao())
+
         userSettings = repository.userSettings
+        ensureDefaultSettings() // Ensures default settings exist
+    }
+
+    private fun ensureDefaultSettings() {
+        viewModelScope.launch {
+            val currentSettings = repository.getUserSettingsDirect() // Directly get UserSettings
+            if (currentSettings == null) {
+                val defaultSettings = UserSettings() // Uses defaults from UserSettings class
+                repository.insertUserSettings(defaultSettings)
+            }
+        }
     }
 
     fun updateDailyGoal(goal: Int) {
