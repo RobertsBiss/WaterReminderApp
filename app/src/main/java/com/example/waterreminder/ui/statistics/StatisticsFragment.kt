@@ -12,6 +12,10 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import java.text.SimpleDateFormat
+import java.util.Locale
+import com.example.waterreminder.data.DailyIntake
+
 
 class StatisticsFragment : Fragment() {
     private var _binding: FragmentStatisticsBinding? = null
@@ -25,6 +29,7 @@ class StatisticsFragment : Fragment() {
     ): View {
         _binding = FragmentStatisticsBinding.inflate(inflater, container, false)
         setupChart()
+        setupNavigation()
         observeData()
         return binding.root
     }
@@ -47,6 +52,17 @@ class StatisticsFragment : Fragment() {
 
             axisRight.isEnabled = false
             legend.isEnabled = true
+            animateY(500)
+        }
+    }
+
+    private fun setupNavigation() {
+        binding.previousMonthButton.setOnClickListener {
+            viewModel.navigateWeek(false)
+        }
+
+        binding.nextMonthButton.setOnClickListener {
+            viewModel.navigateWeek(true)
         }
     }
 
@@ -58,6 +74,10 @@ class StatisticsFragment : Fragment() {
         viewModel.monthlyAverage.observe(viewLifecycleOwner) { average ->
             binding.monthlyAverageText.text = "Monthly Average: ${average}ml"
         }
+
+        viewModel.currentDate.observe(viewLifecycleOwner) {
+            binding.monthYearText.text = viewModel.getFormattedDate()
+        }
     }
 
     private fun updateChart(data: List<DailyIntake>) {
@@ -67,10 +87,13 @@ class StatisticsFragment : Fragment() {
 
         val dataSet = BarDataSet(entries, "Water Intake (ml)").apply {
             color = resources.getColor(R.color.holo_blue_light, null)
+            valueTextSize = 12f
         }
 
-        binding.weeklyChart.data = BarData(dataSet)
-        binding.weeklyChart.invalidate()
+        binding.weeklyChart.apply {
+            this.data = BarData(dataSet)
+            invalidate()
+        }
     }
 
     override fun onDestroyView() {
