@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.1"
+agp = "8.7.2"
 kotlin = "1.9.24"
 coreKtx = "1.12.0"
 junit = "4.13.2"
@@ -19,6 +19,8 @@ databindingCommon = "8.7.1"
 compiler = "3.1.4"
 databindingRuntime = "8.7.1"
 databindingAdapters = "8.7.1"
+cardviewV7 = "28.0.0"
+legacySupportV4 = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +42,8 @@ androidx-databinding-common = { group = "androidx.databinding", name = "databind
 compiler = { group = "com.android.databinding", name = "compiler", version.ref = "compiler" }
 androidx-databinding-runtime = { group = "androidx.databinding", name = "databinding-runtime", version.ref = "databindingRuntime" }
 androidx-databinding-adapters = { group = "androidx.databinding", name = "databinding-adapters", version.ref = "databindingAdapters" }
+cardview-v7 = { group = "com.android.support", name = "cardview-v7", version.ref = "cardviewV7" }
+androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
 
 
 [plugins]

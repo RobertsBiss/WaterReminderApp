@@ -40,7 +40,11 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-
+    packaging {
+        resources {
+            excludes += setOf("META-INF/androidx.cardview_cardview.version")
+        }
+    }
 }
 
 dependencies {
@@ -57,6 +61,8 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.cardview.v7)
+    implementation(libs.androidx.legacy.support.v4)
     //implementation(libs.androidx.databinding.common)
    // implementation(libs.compiler)
    // implementation(libs.androidx.databinding.runtime)

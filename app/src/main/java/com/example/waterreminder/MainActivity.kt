@@ -1,5 +1,6 @@
 package com.example.waterreminder
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
@@ -11,6 +12,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Check if it's the first launch
+        if (PrefsHelper.isFirstLaunch(this)) {
+            // Start SetupActivity
+            startActivity(Intent(this, SetupActivity::class.java))
+            // Mark first launch as completed
+            PrefsHelper.setFirstLaunchCompleted(this)
+            // Finish MainActivity to prevent going back
+            finish()
+            return // Exit onCreate() to avoid further execution
+        }
+
+        // If not first launch, proceed with normal setup
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
