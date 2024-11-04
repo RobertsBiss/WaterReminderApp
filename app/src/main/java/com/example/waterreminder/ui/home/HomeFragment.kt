@@ -8,18 +8,23 @@ import android.view.ViewGroup
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.waterreminder.R
 import com.example.waterreminder.databinding.FragmentHomeBinding
+import com.example.waterreminder.repository.SettingsManager
 import com.example.waterreminder.ui.adapters.WaterLogAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var waterLogAdapter: WaterLogAdapter
+    private lateinit var settingsManager: SettingsManager
+    private var dailyGoal = 0 // Default daily goal value
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,16 +33,18 @@ class HomeFragment : Fragment() {
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
 
+        settingsManager = SettingsManager.getInstance(requireContext())
+
         setupRecyclerView()
         setupUI()
         observeData()
+        observeDailyGoal() // Observe daily goal from SettingsManager
 
         return binding.root
     }
 
     private fun setupRecyclerView() {
         waterLogAdapter = WaterLogAdapter { waterLog ->
-            // Optional: Implement delete functionality if needed
             viewModel.deleteWaterLog(waterLog)
         }
         binding.logRecyclerView.apply {
@@ -81,6 +88,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun observeData() {
+        // Observe water intake logs
         viewModel.todayWaterIntake.observe(viewLifecycleOwner) { logs ->
             val total = logs.sumOf { it.amount }
             updateProgress(total)
@@ -90,13 +98,32 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // Optionally, force an update on fragment creation by calling observeData again
+    override fun onResume() {
+        super.onResume()
+        observeData()  // Triggers recalculation and UI update on fragment resume
+    }
+
+    private fun observeDailyGoal() {
+        settingsManager.userSettings.observe(viewLifecycleOwner) { settings ->
+            settings?.let {
+                dailyGoal = it.dailyGoal
+                updateProgress(binding.progressCircle.progress) // Update progress with the new daily goal
+            }
+        }
+    }
+
     private fun updateProgress(total: Int) {
         binding.progressCircle.progress = calculateProgress(total)
         binding.amountText.text = "$total ml"
     }
 
     private fun calculateProgress(current: Int): Int {
-        return ((current.toFloat() / viewModel.dailyGoal) * 100).toInt()
+        return if (dailyGoal > 0) {
+            ((current.toFloat() / dailyGoal) * 100).toInt()
+        } else {
+            0 // Avoid division by zero if dailyGoal is not set
+        }
     }
 
     override fun onDestroyView() {

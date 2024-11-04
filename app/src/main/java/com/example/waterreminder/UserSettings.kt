@@ -13,11 +13,11 @@ import androidx.room.Update
 data class UserSettings(
     @PrimaryKey
     val id: Int = 1,
-    val waterUnit: String = "ml",
-    val weightUnit: String = "kg",
+    val measurementIsMetric: Boolean = true,
     val timeFormat: String = "24",
     val gender: String = "unspecified",
     val dailyGoal: Int = 2000, // default 2L
+    val weight: Double = 0.0,
     val language: String = "en",
     val remindersEnabled: Boolean = false,
     val reminderTime: String = "09:00",

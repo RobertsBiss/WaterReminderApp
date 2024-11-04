@@ -17,8 +17,7 @@ class MainActivity : AppCompatActivity() {
         if (PrefsHelper.isFirstLaunch(this)) {
             // Start SetupActivity
             startActivity(Intent(this, SetupActivity::class.java))
-            // Mark first launch as completed
-            PrefsHelper.setFirstLaunchCompleted(this)
+
             // Finish MainActivity to prevent going back
             finish()
             return // Exit onCreate() to avoid further execution

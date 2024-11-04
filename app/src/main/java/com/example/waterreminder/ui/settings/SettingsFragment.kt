@@ -1,22 +1,26 @@
 package com.example.waterreminder.ui.settings
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.example.waterreminder.databinding.FragmentSettingsBinding
-import com.example.waterreminder.util.ReminderManager
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
-import java.util.Locale
+import com.example.waterreminder.repository.SettingsManager
+import kotlinx.coroutines.launch
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: SettingsViewModel by viewModels()
-    private lateinit var reminderManager: ReminderManager // Initialize ReminderManager
+    private val viewModel: SettingsViewModel by activityViewModels()
+    private lateinit var settingsManager: SettingsManager
+
+    private var isMetric = true // Track measurement system
+    private var genderMultiplier = 35 // Default to male multiplier
+    private var hasLoadedInitialSettings = false // Flag to control initial load
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -25,7 +29,7 @@ class SettingsFragment : Fragment() {
     ): View {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
 
-        reminderManager = ReminderManager(requireContext()) // Instantiate ReminderManager
+        settingsManager = SettingsManager.getInstance(requireContext())
 
         setupUI()
         observeSettings()
@@ -34,105 +38,105 @@ class SettingsFragment : Fragment() {
 
     private fun setupUI() {
         binding.apply {
-            dailyGoalInput.setOnEditorActionListener { _, _, _ ->
-                updateDailyGoal()
-                true
-            }
-
-            reminderSwitch.setOnCheckedChangeListener { _, isChecked ->
-                if (isChecked) {
-                    showTimePickerDialog()
-                    reminderManager.scheduleReminder(2) // Schedule reminder every 2 hours
-                } else {
-                    reminderManager.cancelReminders() // Cancel reminders if turned off
-                }
-                viewModel.updateReminderEnabled(isChecked)
-            }
-
+            // Update weight unit label based on metric or imperial system
             unitToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
                 if (isChecked) {
-                    viewModel.updateWaterUnit(
-                        when (checkedId) {
-                            binding.mlButton.id -> "ml"
-                            binding.ozButton.id -> "oz"
-                            else -> "ml"
-                        }
-                    )
+                    isMetric = checkedId == binding.metricButton.id
+                    updateWeightTextLabel()
                 }
             }
 
-            themeSwitch.setOnCheckedChangeListener { _, isDark ->
-                viewModel.updateTheme(isDark)
+            // Update gender multiplier based on selected gender
+            genderToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+                if (isChecked) {
+                    genderMultiplier = if (checkedId == binding.genderButton1.id) 35 else 30
+                }
             }
+
+            // Recalculate daily goal and save all settings when recalculate button is pressed
+            recalculateButton.setOnClickListener {
+                calculateAndSaveDailyGoal()
+            }
+
+            // Set up Logcat button to print weight and daily intake goal
+            logcat.setOnClickListener {
+                printSettingsToLogcat()
+            }
+        }
+    }
+
+    private fun updateWeightTextLabel() {
+        // Update weight label with the appropriate unit based on the measurement system
+        val unit = if (isMetric) "kg" else "lb"
+        binding.weightTextView.text = "Weight ($unit)"
+    }
+
+    private fun calculateAndSaveDailyGoal() {
+        val weightText = binding.weightInput.text.toString()
+        val weight = weightText.toDoubleOrNull()
+
+        if (weight != null && weight > 0) {
+            val adjustedWeight = if (isMetric) weight else weight * 0.453592 // Convert to kg if in lbs
+            val dailyGoal = (adjustedWeight * genderMultiplier).toInt()
+
+            // Update UI with calculated goal
+            binding.dailyGoalInput.setText(dailyGoal.toString())
+
+            // Save all settings to the database
+            lifecycleScope.launch {
+                // Save the weight
+                settingsManager.updateWeight(weight)
+
+                // Save the daily water intake goal
+                settingsManager.updateDailyGoal(dailyGoal)
+
+                // Save the gender
+                val gender = if (genderMultiplier == 35) "Male" else "Female"
+                settingsManager.updateGender(gender)
+
+                // Save the measurement system
+                settingsManager.updateMeasurementSystem(isMetric)
+
+                Log.d("SettingsFragment", "Settings saved - Weight: $weight, Daily Goal: $dailyGoal, Gender: $gender, Measurement System: ${if (isMetric) "Metric" else "Imperial"}")
+            }
+        } else {
+            binding.weightInput.error = "Please enter a valid weight"
         }
     }
 
     private fun observeSettings() {
-        viewModel.userSettings.observe(viewLifecycleOwner) { settings ->
-            if (settings != null) {  // Check for null
-                binding.apply {
-                    dailyGoalInput.setText(String.format(Locale.getDefault(), "%d", settings.dailyGoal))
-                    reminderSwitch.isChecked = settings.remindersEnabled
-                    reminderTimeText.text = settings.reminderTime
+        settingsManager.userSettings.observe(viewLifecycleOwner) { settings ->
+            settings?.let {
+                // Ensure this block only runs on initial load
+                if (!hasLoadedInitialSettings) {
+                    hasLoadedInitialSettings = true
 
-                    when (settings.waterUnit) {
-                        "ml" -> unitToggleGroup.check(binding.mlButton.id) // Check ml button
-                        "oz" -> unitToggleGroup.check(binding.ozButton.id) // Check oz button
-                    }
+                    binding.weightInput.setText(it.weight.toString())
+                    binding.dailyGoalInput.setText(it.dailyGoal.toString())
 
-                    themeSwitch.isChecked = settings.isDarkTheme
-                }
-            } else {
-                // Handle the case where settings is null
-                binding.apply {
-                    dailyGoalInput.setText("2000") // Set default value for daily goal
-                    reminderSwitch.isChecked = false // Default to reminders disabled
-                    reminderTimeText.text = "09:00" // Default reminder time
-                    unitToggleGroup.check(binding.mlButton.id) // Default water unit
-                    themeSwitch.isChecked = false // Default to light theme
+                    // Check measurement system
+                    isMetric = it.measurementIsMetric
+                    binding.unitToggleGroup.check(if (isMetric) binding.metricButton.id else binding.imperialButton.id)
+
+                    // Check gender
+                    binding.genderToggleGroup.check(
+                        if (it.gender == "Male") binding.genderButton1.id else binding.genderButton2.id
+                    )
+
+                    updateWeightTextLabel()
                 }
             }
         }
+    }
 
-        viewModel.settingsUpdateEvent.observe(viewLifecycleOwner) { event ->
-            when (event) {
-                is SettingsUpdateEvent.Success -> showSuccessMessage()
-                is SettingsUpdateEvent.Error -> showErrorMessage(event.message)
+    private fun printSettingsToLogcat() {
+        lifecycleScope.launch {
+            val settings = settingsManager.getUserSettingsDirect()
+            settings?.let {
+                Log.d("SettingsFragment", "Weight: ${it.weight} kg")
+                Log.d("SettingsFragment", "Daily Water Intake Goal: ${it.dailyGoal} ml")
             }
         }
-    }
-
-    private fun showTimePickerDialog() {
-        val picker = MaterialTimePicker.Builder()
-            .setTimeFormat(TimeFormat.CLOCK_24H)
-            .setHour(9)
-            .setMinute(0)
-            .setTitleText("Set Reminder Time")
-            .build()
-
-        picker.addOnPositiveButtonClickListener {
-            val timeString = String.format(Locale.getDefault(), "%02d:%02d", picker.hour, picker.minute)
-            viewModel.updateReminderTime(timeString)
-        }
-
-        picker.show(parentFragmentManager, "time_picker")
-    }
-
-    private fun updateDailyGoal() {
-        val goal = binding.dailyGoalInput.text.toString().toIntOrNull()
-        if (goal != null && goal > 0) {
-            viewModel.updateDailyGoal(goal)
-        } else {
-            binding.dailyGoalInput.error = "Please enter a valid goal"
-        }
-    }
-
-    private fun showSuccessMessage() {
-        // Show success message using Snackbar or Toast
-    }
-
-    private fun showErrorMessage(message: String) {
-        // Show error message using Snackbar or Toast
     }
 
     override fun onDestroyView() {

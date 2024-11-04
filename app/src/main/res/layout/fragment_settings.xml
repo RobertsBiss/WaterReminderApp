@@ -33,11 +33,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Daily Goal"
+                    android:text="Daily Goal (ml)"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/dailyGoal_textInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -51,6 +52,110 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="16dp"
+                    android:layout_weight="1" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/weight_textView"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Weight"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_marginTop="8dp"
+                                android:hint="Weight">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/weight_input"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="number" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Gender"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <com.google.android.material.button.MaterialButtonToggleGroup
+                                android:id="@+id/gender_toggle_group"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_marginTop="8dp"
+                                app:singleSelection="true">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/gender_button_1"
+                                    style="?attr/materialButtonOutlinedStyle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Male" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/gender_button_2"
+                                    style="?attr/materialButtonOutlinedStyle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Female" />
+
+                            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                        </LinearLayout>
+
+                        <Space
+                            android:layout_width="match_parent"
+                            android:layout_height="16dp" />
+
+                        <Button
+                            android:id="@+id/recalculate_button"
+                            android:layout_width="227dp"
+                            android:layout_height="wrap_content"
+                            android:text="Recalculate Daily Goal" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:id="@+id/qweqwprjngloajer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Measurment System"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
                 <com.google.android.material.button.MaterialButtonToggleGroup
                     android:id="@+id/unit_toggle_group"
                     android:layout_width="wrap_content"
@@ -59,20 +164,26 @@
                     app:singleSelection="true">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/ml_button"
+                        android:id="@+id/metric_button"
+                        style="?attr/materialButtonOutlinedStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ml"
-                        style="?attr/materialButtonOutlinedStyle" />
+                        android:text="Metric" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/oz_button"
+                        android:id="@+id/imperial_button"
+                        style="?attr/materialButtonOutlinedStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="oz"
-                        style="?attr/materialButtonOutlinedStyle" />
+                        android:text="Imperial" />
 
                 </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <Button
+                    android:id="@+id/logcat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="LogCat" />
 
             </LinearLayout>
 
