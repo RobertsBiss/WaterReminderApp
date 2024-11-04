@@ -17,6 +17,7 @@ data class UserSettings(
     val timeFormat: String = "24",
     val gender: String = "unspecified",
     val dailyGoal: Int = 2000, // default 2L
+    val fixedWaterAmount: Int = 0,
     val weight: Double = 0.0,
     val language: String = "en",
     val remindersEnabled: Boolean = false,

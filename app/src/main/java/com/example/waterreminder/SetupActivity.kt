@@ -112,6 +112,7 @@ class SetupActivity : AppCompatActivity() {
             timeFormat = "24", // Assuming 24-hour format, change if needed
             gender = gender,
             dailyGoal = dailyGoal,
+            fixedWaterAmount = 250,
             weight = weight,
             language = Locale.getDefault().language,
             remindersEnabled = remindersEnabled,

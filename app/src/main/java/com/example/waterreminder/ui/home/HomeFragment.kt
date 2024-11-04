@@ -25,6 +25,7 @@ class HomeFragment : Fragment() {
     private lateinit var waterLogAdapter: WaterLogAdapter
     private lateinit var settingsManager: SettingsManager
     private var dailyGoal = 0 // Default daily goal value
+    private var fixedAmount = 250 // Default fixed amount of 250 ml for add_water_button2
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,9 +39,15 @@ class HomeFragment : Fragment() {
         setupRecyclerView()
         setupUI()
         observeData()
-        observeDailyGoal() // Observe daily goal from SettingsManager
+        observeDailyGoal()
+        observeFixedAmount() // Observe the fixed water amount from SettingsManager
 
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        observeData()  // Triggers recalculation and UI update on fragment resume
     }
 
     private fun setupRecyclerView() {
@@ -56,6 +63,17 @@ class HomeFragment : Fragment() {
     private fun setupUI() {
         binding.addWaterButton.setOnClickListener {
             showAddWaterDialog()
+        }
+
+        // Handle single press on add_water_button2 to add the fixed amount
+        binding.addWaterButton2.setOnClickListener {
+            viewModel.addWaterIntake(fixedAmount)  // Adds the fixed amount of water
+        }
+
+        // Handle long press on add_water_button2 to allow the user to change the fixed amount
+        binding.addWaterButton2.setOnLongClickListener {
+            showSetFixedAmountDialog()  // Opens a dialog to set the fixed amount
+            true  // Return true to indicate that the long press was handled
         }
     }
 
@@ -87,6 +105,43 @@ class HomeFragment : Fragment() {
             .show()
     }
 
+    // Dialog to change the fixed amount for the add_water_button2
+    private fun showSetFixedAmountDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_water, null)
+        val amountInput = dialogView.findViewById<EditText>(R.id.water_amount_input)
+        amountInput.setHint("Enter fixed amount")
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Set Fixed Amount")
+            .setView(dialogView)
+            .setPositiveButton("Set") { _, _ ->
+                val amountText = amountInput.text.toString().trim()
+                if (amountText.isNotEmpty()) {
+                    try {
+                        val amount = amountText.toInt()
+                        if (amount > 0) {
+                            fixedAmount = amount
+                            saveFixedAmount(amount)  // Save the fixed amount to settings
+                            updateFixedAmountButtonText()  // Update the button text after setting new amount
+                        } else {
+                            Snackbar.make(binding.root, "Please enter a valid amount", Snackbar.LENGTH_SHORT).show()
+                        }
+                    } catch (e: NumberFormatException) {
+                        Snackbar.make(binding.root, "Please enter a valid number", Snackbar.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Snackbar.make(binding.root, "Please enter an amount", Snackbar.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    // Function to update button text to display the current fixed amount
+    private fun updateFixedAmountButtonText() {
+        binding.addWaterButton2.text = "+${fixedAmount} ml"  // Set the button text
+    }
+
     private fun observeData() {
         // Observe water intake logs
         viewModel.todayWaterIntake.observe(viewLifecycleOwner) { logs ->
@@ -98,18 +153,30 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // Optionally, force an update on fragment creation by calling observeData again
-    override fun onResume() {
-        super.onResume()
-        observeData()  // Triggers recalculation and UI update on fragment resume
-    }
-
     private fun observeDailyGoal() {
         settingsManager.userSettings.observe(viewLifecycleOwner) { settings ->
             settings?.let {
                 dailyGoal = it.dailyGoal
                 updateProgress(binding.progressCircle.progress) // Update progress with the new daily goal
             }
+        }
+    }
+
+    // Observe the fixed amount from SettingsManager
+    private fun observeFixedAmount() {
+        settingsManager.userSettings.observe(viewLifecycleOwner) { settings ->
+            settings?.let {
+                fixedAmount = it.fixedWaterAmount
+                updateFixedAmountButtonText() // Update the button with the current fixed amount
+            }
+        }
+    }
+
+    private fun saveFixedAmount(amount: Int) {
+        lifecycleScope.launch {
+            settingsManager.saveFixedWaterAmount(amount)
+            // Recalculate progress to avoid the low-number issue after changing fixed amount
+            observeData()  // Manually refresh the observed data
         }
     }
 
@@ -128,7 +195,6 @@ class HomeFragment : Fragment() {
         binding.dailydoseText.text = "$dailyGoal ml"
     }
 
-
     private fun calculateProgress(current: Int): Int {
         return if (dailyGoal > 0) {
             ((current.toFloat() / dailyGoal) * 100).toInt()
@@ -142,3 +208,6 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 }
+
+
+

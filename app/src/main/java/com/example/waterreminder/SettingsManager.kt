@@ -50,6 +50,13 @@ class SettingsManager private constructor(context: Context) {
         }
     }
 
+    suspend fun saveFixedWaterAmount(amount: Int) = withContext(Dispatchers.IO) {
+        val settings = getUserSettingsDirect()
+        if (settings != null) {
+            userSettingsDao.update(settings.copy(fixedWaterAmount = amount))
+        }
+    }
+
     // Function to enable or disable reminders
     suspend fun updateRemindersEnabled(enabled: Boolean) = withContext(Dispatchers.IO) {
         val settings = getUserSettingsDirect()
