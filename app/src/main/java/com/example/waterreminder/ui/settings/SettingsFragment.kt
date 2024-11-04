@@ -58,10 +58,10 @@ class SettingsFragment : Fragment() {
                 calculateAndSaveDailyGoal()
             }
 
-            // Set up Logcat button to print weight and daily intake goal
-            logcat.setOnClickListener {
-                printSettingsToLogcat()
-            }
+//            // Set up Logcat button to print weight and daily intake goal
+//            logcat.setOnClickListener {
+//                printSettingsToLogcat()
+//            }
         }
     }
 

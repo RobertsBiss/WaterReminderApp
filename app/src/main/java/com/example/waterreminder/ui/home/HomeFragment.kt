@@ -114,9 +114,20 @@ class HomeFragment : Fragment() {
     }
 
     private fun updateProgress(total: Int) {
-        binding.progressCircle.progress = calculateProgress(total)
+        // Calculate percentage and update the progress circle
+        val percentage = calculateProgress(total)
+        binding.progressCircle.progress = percentage
+
+        // Update the text showing how much water has been consumed
         binding.amountText.text = "$total ml"
+
+        // Update the percentage text with the calculated percentage
+        binding.percentageText.text = "$percentage%"
+
+        // Display the daily goal like "2000 ml"
+        binding.dailydoseText.text = "$dailyGoal ml"
     }
+
 
     private fun calculateProgress(current: Int): Int {
         return if (dailyGoal > 0) {
