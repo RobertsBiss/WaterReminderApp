@@ -17,6 +17,11 @@ import com.example.waterreminder.ui.adapters.WaterLogAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import nl.dionsegijn.konfetti.xml.KonfettiView
+import java.util.concurrent.TimeUnit
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -26,6 +31,7 @@ class HomeFragment : Fragment() {
     private lateinit var settingsManager: SettingsManager
     private var dailyGoal = 0 // Default daily goal value
     private var fixedAmount = 250 // Default fixed amount of 250 ml for add_water_button2
+    private lateinit var konfettiView: KonfettiView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,6 +41,7 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
 
         settingsManager = SettingsManager.getInstance(requireContext())
+        konfettiView = binding.konfettiView
 
         setupRecyclerView()
         setupUI()
@@ -43,6 +50,18 @@ class HomeFragment : Fragment() {
         observeFixedAmount() // Observe the fixed water amount from SettingsManager
 
         return binding.root
+    }
+
+    private val party by lazy { // Create Party object lazily
+        Party(
+            speed = 0f,
+            maxSpeed = 30f,
+            damping = 0.9f,
+            spread = 360,
+            colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+            emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
+            position = Position.Relative(0.5, 0.3)
+        )
     }
 
     override fun onResume() {
@@ -193,6 +212,13 @@ class HomeFragment : Fragment() {
 
         // Display the daily goal like "2000 ml"
         binding.dailydoseText.text = "$dailyGoal ml"
+
+        if (total >= dailyGoal) { // Check if goal is reached and confetti isn't already active
+            konfettiView.start(party)
+            konfettiView.visibility = View.VISIBLE // Make KonfettiView visible
+        } else if (total < dailyGoal) {
+            konfettiView.visibility = View.GONE // Hide KonfettiView if goal isn't reached
+        }
     }
 
     private fun calculateProgress(current: Int): Int {
