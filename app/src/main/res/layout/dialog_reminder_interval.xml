@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <RadioGroup
+        android:id="@+id/reminderRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/radio_5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5 minutes" />
+
+        <RadioButton
+            android:id="@+id/radio_10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10 minutes" />
+
+        <RadioButton
+            android:id="@+id/radio_30"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="30 minutes" />
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/customMinutesInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Custom minutes (e.g. 45)"
+        android:inputType="number" />
+
+</LinearLayout>

@@ -103,7 +103,7 @@ class SetupActivity : AppCompatActivity() {
         val selectedUnit = if (measurementSystem == "Metric") true else false
         val dailyGoal = recommendedIntake
         val remindersEnabled = false // Placeholder for reminder functionality
-        val reminderTime = "09:00" // Placeholder for the selected reminder time
+        val reminderTime = -1 // Placeholder for the selected reminder time
         val isDarkTheme = true // Placeholder for dark theme functionality
 
         val userSettings = UserSettings(

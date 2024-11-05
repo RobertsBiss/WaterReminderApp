@@ -21,7 +21,7 @@ data class UserSettings(
     val weight: Double = 0.0,
     val language: String = "en",
     val remindersEnabled: Boolean = false,
-    val reminderTime: String = "09:00",
+    val reminderTime: Int = -1,
     val isDarkTheme: Boolean = false
 
 )

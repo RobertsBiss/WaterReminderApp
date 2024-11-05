@@ -21,15 +21,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val reminderManager = ReminderManager(application) // Initialized in SettingsViewModel
 
     init {
-
         val database = WaterReminderDatabase.getDatabase(application)
         repository = WaterRepository(database.waterLogDao(), database.userSettingsDao())
-
         userSettings = repository.userSettings
         ensureDefaultSettings() // Ensures default settings exist
     }
 
-    // Inside SettingsViewModel.kt
     private fun ensureDefaultSettings() {
         if (PrefsHelper.isFirstLaunch(getApplication())) {
             viewModelScope.launch {
@@ -43,6 +40,47 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val currentSettings = userSettings.value ?: return@launch
+                val updatedSettings = currentSettings.copy(remindersEnabled = enabled)
+                repository.updateUserSettings(updatedSettings)
+                _settingsUpdateEvent.value = SettingsUpdateEvent.Success
+                updateReminders(enabled) // Call to manage reminders
+            } catch (e: Exception) {
+                _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update reminder settings")
+            }
+        }
+    }
+
+    fun updateReminderTime(time: Int) {
+        viewModelScope.launch {
+            try {
+                val currentSettings = userSettings.value ?: return@launch
+                val updatedSettings = currentSettings.copy(reminderTime = time) // Store time in seconds
+                repository.updateUserSettings(updatedSettings)
+                _settingsUpdateEvent.value = SettingsUpdateEvent.Success
+                updateReminders(true, time) // Pass time in seconds to update reminders
+            } catch (e: Exception) {
+                _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update reminder time")
+            }
+        }
+    }
+
+
+//    private fun parseReminderTimeToSeconds(time: String): Int {
+//        val (hours, minutes) = time.split(":").map { it.toInt() }
+//        return hours * 3600 + minutes * 60
+//    }
+
+    fun updateReminders(enabled: Boolean, intervalSeconds: Int = 7200) { // 2 hours default
+        if (enabled) {
+            reminderManager.scheduleReminder(intervalSeconds)
+        } else {
+            reminderManager.cancelReminders()
+        }
+    }
 
     fun updateDailyGoal(goal: Int) {
         viewModelScope.launch {
@@ -74,19 +112,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-//    fun updateWaterUnit(unit: String) {
-//        viewModelScope.launch {
-//            try {
-//                val currentSettings = userSettings.value ?: return@launch
-//                val updatedSettings = currentSettings.copy(waterUnit = unit)
-//                repository.updateUserSettings(updatedSettings)
-//                _settingsUpdateEvent.value = SettingsUpdateEvent.Success
-//            } catch (e: Exception) {
-//                _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update water unit")
-//            }
-//        }
-//    }
-
     fun updateGender(gender: String) {
         viewModelScope.launch {
             try {
@@ -96,33 +121,6 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 _settingsUpdateEvent.value = SettingsUpdateEvent.Success
             } catch (e: Exception) {
                 _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update gender")
-            }
-        }
-
-    }
-
-    fun updateReminderEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                val currentSettings = userSettings.value ?: return@launch
-                val updatedSettings = currentSettings.copy(remindersEnabled = enabled)
-                repository.updateUserSettings(updatedSettings)
-                _settingsUpdateEvent.value = SettingsUpdateEvent.Success
-            } catch (e: Exception) {
-                _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update reminder settings")
-            }
-        }
-    }
-
-    fun updateReminderTime(time: String) {
-        viewModelScope.launch {
-            try {
-                val currentSettings = userSettings.value ?: return@launch
-                val updatedSettings = currentSettings.copy(reminderTime = time)
-                repository.updateUserSettings(updatedSettings)
-                _settingsUpdateEvent.value = SettingsUpdateEvent.Success
-            } catch (e: Exception) {
-                _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update reminder time")
             }
         }
     }
@@ -138,36 +136,22 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update theme")
             }
         }
+    }
 
-        fun updateSettings(settings: UserSettings) {
-            viewModelScope.launch {
-                repository.updateUserSettings(settings)
-            }
-        }
-
-        fun updateReminders(enabled: Boolean, intervalHours: Int = 2) {
-            if (enabled) {
-                reminderManager.scheduleReminder(intervalHours)
-            } else {
-                reminderManager.cancelReminders()
-            }
-        }
-
-        fun saveSettingsAndProceed(weight: Double, gender: String, goal: Int, onComplete: () -> Unit) {
-            viewModelScope.launch {
-                try {
-                    val currentSettings = userSettings.value ?: UserSettings()
-                    val updatedSettings = currentSettings.copy(
-                        weight = weight,
-                        gender = gender,
-                        dailyGoal = goal
-                    )
-                    repository.updateUserSettings(updatedSettings)
-                    _settingsUpdateEvent.value = SettingsUpdateEvent.Success
-                    onComplete()
-                } catch (e: Exception) {
-                    _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update settings")
-                }
+    fun saveSettingsAndProceed(weight: Double, gender: String, goal: Int, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val currentSettings = userSettings.value ?: UserSettings()
+                val updatedSettings = currentSettings.copy(
+                    weight = weight,
+                    gender = gender,
+                    dailyGoal = goal
+                )
+                repository.updateUserSettings(updatedSettings)
+                _settingsUpdateEvent.value = SettingsUpdateEvent.Success
+                onComplete()
+            } catch (e: Exception) {
+                _settingsUpdateEvent.value = SettingsUpdateEvent.Error("Failed to update settings")
             }
         }
     }
